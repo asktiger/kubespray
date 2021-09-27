@@ -107,12 +107,15 @@
     - not ignore_assert_errors
     - inventory_hostname in groups['kube_node']
 
-- name: Stop when ShutdownGracePeriod less than ShutdownGracePeriodCriticalPods
+- name: Stop when dynamic_kubelet_configuration enabled for kubernetes >= 1.22
   assert:
-    that: kubelet_shutdown_grace_period > kubelet_shutdown_grace_period_critical_pods
-    msg: "ShutdownGracePeriod ({{ kubelet_shutdown_grace_period }}) needs to be greater than ShutdownGracePeriodCriticalPods ({{ kubelet_shutdown_grace_period_critical_pods }}) in order to give normal pods time to be evacuated, please see https://kubernetes.io/blog/2021/04/21/graceful-node-shutdown-beta/ for details"
+    that: not dynamic_kubelet_configuration
+    msg: >
+      Feature DynamicKubeletConfig is deprecated in 1.22 and will not move to GA.
+      It is planned to be removed from Kubernetes in the version 1.23.
+      Please use alternative ways to update kubelet configuration.
   when:
-    - kube_version is version('v1.21.0', '>=')
+    - kube_version is version('v1.22.0', '>=')
 
 # This assertion will fail on the safe side: One can indeed schedule more pods
 # on a node than the CIDR-range has space for when additional pods use the host
@@ -189,14 +192,6 @@
     - cloud-provider
     - facts
 
-- name: Ensure minimum calico version
-  assert:
-    that: calico_version is version(calico_min_version_required, '>=')
-    msg: "calico_version is too low. Minimum version {{ calico_min_version_required }}"
-  run_once: yes
-  when:
-    - kube_network_plugin == 'calico'
-
 - name: Get current calico cluster version
   shell: "set -o pipefail && {{ bin_dir }}/calicoctl.sh version  | grep 'Cluster Version:' | awk '{ print $3}'"
   args:
@@ -213,8 +208,10 @@
 - name: Check that current calico version is enough for upgrade
   assert:
     that:
-      - calico_version_on_server.stdout is version( 'v3.0.0', '>=')
-    msg: "Your version of calico is not fresh enough for upgrade. Minimum version is v3.0.0"
+      - calico_version_on_server.stdout is version(calico_min_version_required, '>=')
+    msg: >
+      Your version of calico is not fresh enough for upgrade.
+      Minimum version is {{ calico_min_version_required }} supported by the previous kubespray release.
   when:
     - kube_network_plugin == 'calico'
     - 'calico_version_on_server.stdout is defined'

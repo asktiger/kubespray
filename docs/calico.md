@@ -189,7 +189,7 @@ To re-define default action please set the following variable in your inventory:
 calico_endpoint_to_host_action: "ACCEPT"
 ```
 
-## Optional : Define address on which Felix will respond to health requests
+### Optional : Define address on which Felix will respond to health requests
 
 Since Calico 3.2.0, HealthCheck default behavior changed from listening on all interfaces to just listening on localhost.
 
@@ -197,6 +197,15 @@ To re-define health host please set the following variable in your inventory:
 
 ```yml
 calico_healthhost: "0.0.0.0"
+```
+
+### Optional : Configure Calico Node probe timeouts
+
+Under certain conditions a deployer may need to tune the Calico liveness and readiness probes timeout settings. These can be configured like this:
+
+```yml
+calico_node_livenessprobe_timeout: 10
+calico_node_readinessprobe_timeout: 10
 ```
 
 ## Config encapsulation for cross server traffic
@@ -288,6 +297,8 @@ To enable the eBPF dataplane support ensure you add the following to your invent
 calico_bpf_enabled: true
 kube_proxy_remove: true
 ```
+
+**NOTE:** there is known incompatibility in using the `kernel-kvm` kernel package on Ubuntu OSes because it is missing support for `CONFIG_NET_SCHED` which is a requirement for Calico eBPF support. When using Calico eBPF with Ubuntu ensure you run the `-generic` kernel.
 
 ### Cleaning up after kube-proxy
 
