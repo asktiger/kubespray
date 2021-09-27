@@ -1,0 +1,34 @@
+global
+  log 127.0.0.1 local0
+  log 127.0.0.1 local1 notice
+  tune.ssl.default-dh-param 2048
+
+defaults
+  log global
+  mode http
+  option dontlognull
+  timeout connect 5000ms
+  timeout client 600000ms
+  timeout server 600000ms
+
+listen stats
+    bind :8090
+    mode http
+    balance
+    stats uri /haproxy_status
+    stats auth admin:P@ssw0rd
+    stats admin if TRUE
+
+frontend kube-apiserver-https
+   mode tcp
+   bind :{{ loadbalancer_apiserver.port }}
+   default_backend kube-apiserver-backend
+
+backend kube-apiserver-backend
+    mode tcp
+    balance roundrobin
+    stick-table type ip size 200k expire 30m
+    stick on src
+    {% for host in groups['kube_control_plane'] -%}
+    server {{ host }} {{ hostvars[host]['access_ip'] | default(hostvars[host]['ip'] | default(fallback_ips[host])) }}:{{ kube_apiserver_port }} check check-ssl verify none
+    {% endfor -%}

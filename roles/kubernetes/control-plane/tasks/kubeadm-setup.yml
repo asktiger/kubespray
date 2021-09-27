@@ -102,6 +102,18 @@
   when:
     - kubeadm_already_run.stat.exists
 
+- import_tasks: haproxy-setup.yml
+  when:
+    - loadbalancer_apiserver_ext is defined 
+    - loadbalancer_apiserver_ext_type == 'haproxy-ha'
+  ignore_errors: true  # noqa ignore-errors
+
+- import_tasks: kube-vip-setup.yml
+  when:
+    - loadbalancer_apiserver_ext is defined
+    - loadbalancer_apiserver_ext_type == 'kube-vip' 
+  ignore_errors: true  # noqa ignore-errors
+
 - name: kubeadm | regenerate apiserver cert 1/2
   file:
     state: absent
@@ -121,7 +133,7 @@
   when:
     - kubeadm_already_run.stat.exists
     - apiserver_sans_check.changed
-
+    
 - name: kubeadm | Initialize first master
   command: >-
     timeout -k 300s 300s

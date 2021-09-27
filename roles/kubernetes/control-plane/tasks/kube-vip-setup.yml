@@ -1,0 +1,8 @@
+- name: kubeadm | Copy kube-vip YAML file to create NLB
+  template:
+    src: "kube-vip.yaml.j2"
+    dest: "{{ kube_manifest_dir }}/kube-vip.yaml"
+    owner: root
+    mode: 0644
+    backup: yes
+

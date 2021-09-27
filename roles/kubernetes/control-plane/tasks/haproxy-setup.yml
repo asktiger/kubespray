@@ -1,0 +1,46 @@
+- name: kubeadm | Create HAProxy config directory
+  file:
+    path: "{{ haproxy_config_dir }}"
+    state: directory
+    mode: 0700
+    owner: root
+
+- name: kubeadm | Copy HAProxy config file to config directory
+  template:
+    src: "haproxy.cfg.j2"
+    dest: "{{ haproxy_config_dir }}/haproxy.cfg"
+    owner: root
+    mode: 0644
+    backup: yes
+
+- name: kubeadm | Copy HAProxy YAML file to create NLB
+  copy:
+    src: files/haproxy.yml
+    dest: "{{ kube_manifest_dir }}"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: kubeadm | Create Keepalived config directory
+  file:
+    path: "{{ keepalived_config_dir }}"
+    state: directory
+    mode: 0700
+    owner: root
+
+- name: kubeadm | Copy Keepalived config file to config directory
+  template:
+    src: "keepalived.conf.j2"
+    dest: "{{ keepalived_config_dir }}/keepalived.conf"
+    owner: root
+    mode: 0644
+    backup: yes
+
+- name: kubeadm | Copy Keepalived YAML file to monitor NLB status
+  copy:
+    src: files/keepalived.yml
+    dest: "{{ kube_manifest_dir }}"
+    owner: root
+    group: root
+    mode: 0644
+

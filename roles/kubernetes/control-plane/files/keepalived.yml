@@ -1,0 +1,33 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  labels:
+    component: keepalived
+    tier: control-plane
+  name: kube-keepalived
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  priorityClassName: system-cluster-critical
+  containers:
+  - name: kube-keepalived
+    image: docker.io/osixia/keepalived:2.0.17
+    resources:
+      requests:
+        cpu: 100m
+    securityContext:
+      privileged: true
+      capabilities:
+        add:
+        - NET_ADMIN
+    volumeMounts:
+    - name: keepalived-conf
+      readOnly: true
+      mountPath: /usr/local/etc/keepalived/keepalived.conf
+  volumes:
+  - name: keepalived-conf
+    hostPath:
+      path: /etc/keepalived/keepalived.conf
+      type: FileOrCreate
